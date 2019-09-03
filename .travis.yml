@@ -27,3 +27,18 @@ after_success:
    - docker push rodrr301/multi-nginx
    - docker push rodrr301/multi-server
    - docker push rodrr301/multi-worker
+   
+# although we    
+deploy:
+   provider: elasticbeanstalk
+   region: "us-east-2"
+   app: "multi-docker"
+   env: "MultiDocker-env"
+   bucket_name: "elasticbeanstalk-us-east-2-175860741103"
+   bucket_path: "multi-docker"
+   on:
+   # only when code is merged in master do a deployment.
+      branch: master
+   access_key_id: $AWS_ACCESS_KEY
+   secret_access_key:
+      secure: "$AWS_SECRET_KEY"
