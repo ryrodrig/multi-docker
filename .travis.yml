@@ -1,0 +1,29 @@
+sudo: required
+services:
+   - docker
+   
+before_install:
+# use the dev file to build the image as this is the image against which the tests ( scripts section) would be run.
+# also update the context to ./client as the code is within this folder
+# we could build server/worker as well if we decided to run tests against those projects.
+   - docker build -t rodrr301/react-test -f ./client/Dockerfile.dev ./client
+   
+   
+script:
+# -- --coverage will exit after first test run.
+   - docker run -e CI=true rodrr301/react-test npm run test -- --coverage
+   
+# build production images.   
+after_success:
+   - docker build -t rodrr301/multi-client ./client
+   - docker build -t rodrr301/multi-nginx ./nginx
+   - docker build -t rodrr301/multi-server ./server
+   - docker build -t rodrr301/multi-worker ./worker        
+# login to docker CLI ( user name and password are defined as environmnet variables in travis)
+# reads the DOCKER_PASSWORD from travis ci and links to stdin and then runs the docker login command.
+   - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+# push the image to docker hub as aws will then read our project from dockerhub
+   - docker push rodrr301/multi-client
+   - docker push rodrr301/multi-nginx
+   - docker push rodrr301/multi-server
+   - docker push rodrr301/multi-worker
