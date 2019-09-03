@@ -1,0 +1,49 @@
+version: '3'
+services:
+   postgres:
+      image: 'postgres:latest'
+   redis:
+      image: 'redis:latest'
+   nginx:
+   # always make sure nginx is up and running.
+      restart: always
+      build:
+         dockerfile: Dockerfile.dev
+         context: ./nginx
+      ports:
+         - '3050:80'   
+   api:
+      depends_on:
+         - postgres
+      build:
+         dockerfile: Dockerfile.dev
+         context: ./server
+      volumes:
+         - /usr/apps/stery/Complex/server/node_modules
+         - ./server:/usr/apps/stery/Complex/server    
+      environment:
+         # name/url is the name of the service
+         - REDIS_HOST='redis'
+         - REDIS_PORT=6379
+         - PGUSER=postgres
+         - PGHOST=postgres
+         - PGDATABASE=postgres
+         - PGPASSWORD=postgres_password
+         - PGPORT=5432     
+   client:
+      build:
+         dockerfile: Dockerfile.dev
+         context: ./client
+      volumes:
+         - /usr/apps/stery/Complex/client/node_modules
+         - ./client:/usr/apps/stery/Complex/client
+   worker:
+      environment:
+         - REDIS_HOST='redis'
+         - REDIS_PORT=6379 
+      build:
+         dockerfile: Dockerfile.dev
+         context: ./worker
+      volumes:
+         - /usr/apps/stery/Complex/worker/node_modules
+         - ./worker:/usr/apps/stery/Complex/worker
